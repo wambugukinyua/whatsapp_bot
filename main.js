@@ -118,6 +118,7 @@ const channelInfo = {
 };
 
 async function handleMessages(sock, messageUpdate, printLog) {
+    let chatId;
     try {
         const { messages, type } = messageUpdate;
         if (type !== 'notify') return;
@@ -136,7 +137,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
             return;
         }
 
-        const chatId = message.key.remoteJid;
+        chatId = message.key.remoteJid;
         const senderId = message.key.participant || message.key.remoteJid;
         const isGroup = chatId.endsWith('@g.us');
 
@@ -201,7 +202,6 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 // Process non-command messages first
                 await handleChatbotResponse(sock, chatId, message, userMessage, senderId);
                 await Antilink(message, sock);
-                await handleBadwordDetection(sock, chatId, message, userMessage, senderId);
             }
             return;
         }
@@ -439,7 +439,7 @@ async function handleMessages(sock, messageUpdate, printLog) {
                 if (isNaN(position)) {
                     await sock.sendMessage(chatId, { text: 'Please provide a valid position number for Tic-Tac-Toe move.', ...channelInfo });
                 } else {
-                    tictactoeMove(sock, chatId, senderId, position);
+                    handleTicTacToeMove(sock, chatId, senderId, position);
                 }
                 break;
             case userMessage === '.topmembers':
@@ -653,9 +653,6 @@ async function handleMessages(sock, messageUpdate, printLog) {
             case userMessage.startsWith('.autostatus'):
                 const autoStatusArgs = userMessage.split(' ').slice(1);
                 await autoStatusCommand(sock, chatId, message, autoStatusArgs);
-                break;
-            case userMessage.startsWith('.simp'):
-                await simpCommand(sock, chatId, message);
                 break;
             case userMessage.startsWith('.metallic'):
                 await textmakerCommand(sock, chatId, message, userMessage, 'metallic');
